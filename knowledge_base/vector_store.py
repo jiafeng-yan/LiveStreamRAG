@@ -5,20 +5,7 @@ from typing import List, Dict, Any, Optional
 import os
 import shutil
 
-
-# 添加ChromaDB嵌入函数包装器
-class EmbeddingFunctionWrapper:
-    """ChromaDB嵌入函数包装器"""
-
-    def __init__(self, embedding_model):
-        self.embedding_model = embedding_model
-
-    def __call__(self, input):
-        """兼容ChromaDB的调用接口"""
-        if isinstance(input, str):
-            return self.embedding_model.embed_query(input)
-        else:
-            return self.embedding_model.embed_documents(input)
+from knowledge_base.embedding import ChromaEmbeddingAdapter
 
 
 class VectorStore:
@@ -54,12 +41,12 @@ class VectorStore:
             length_function=len,
         )
 
-        # 使用包装器包装嵌入模型以兼容ChromaDB新接口
-        self.embedding_function = EmbeddingFunctionWrapper(embedding_model)
+        # 创建与Chroma兼容的嵌入适配器
+        self.embeddings = ChromaEmbeddingAdapter("all-MiniLM-L6-v2")
 
         # 初始化向量存储
         self.vectordb = Chroma(
-            persist_directory=db_path, embedding_function=self.embedding_function
+            persist_directory=db_path, embedding_function=self.embeddings
         )
 
         # 文档索引，用于管理文档和向量存储的关系
@@ -150,6 +137,6 @@ class VectorStore:
         os.makedirs(self.db_path, exist_ok=True)
 
         self.vectordb = Chroma(
-            persist_directory=self.db_path, embedding_function=self.embedding_function
+            persist_directory=self.db_path, embedding_function=self.embeddings
         )
         self.document_index = {}

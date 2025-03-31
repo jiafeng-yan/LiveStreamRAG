@@ -1,71 +1,86 @@
-from typing import List
+from sentence_transformers import SentenceTransformer
+from typing import List, Any, Union
 import numpy as np
-from transformers import AutoTokenizer, AutoModel
-import torch
 
 
 class EmbeddingModel:
     """文本嵌入模型封装类"""
 
-    def __init__(self, model_name="bert-base-uncased"):
+    def __init__(self, model_name="all-MiniLM-L6-v2"):
         """
         初始化嵌入模型
 
         Args:
-            model_name: 使用的模型名称
+            model_name: 使用的模型名称，默认使用通用多语言模型
         """
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = self.model.to(self.device)
-
-    def _mean_pooling(self, model_output, attention_mask):
-        """平均池化操作"""
-        token_embeddings = model_output[0]
-        input_mask_expanded = (
-            attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-        )
-        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(
-            input_mask_expanded.sum(1), min=1e-9
-        )
+        self.model = SentenceTransformer(model_name)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        """将多个文本转换为嵌入向量"""
-        # 分批处理以节省内存
-        batch_size = 32
-        all_embeddings = []
+        """
+        将多个文本转换为嵌入向量
 
-        for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i : i + batch_size]
+        Args:
+            texts: 文本列表
 
-            # tokenize
-            encoded_input = self.tokenizer(
-                batch_texts,
-                padding=True,
-                truncation=True,
-                max_length=512,
-                return_tensors="pt",
-            )
-            encoded_input = {k: v.to(self.device) for k, v in encoded_input.items()}
-
-            # 计算token embeddings
-            with torch.no_grad():
-                model_output = self.model(**encoded_input)
-
-            # 池化
-            sentence_embeddings = self._mean_pooling(
-                model_output, encoded_input["attention_mask"]
-            )
-
-            # 归一化
-            sentence_embeddings = torch.nn.functional.normalize(
-                sentence_embeddings, p=2, dim=1
-            )
-
-            all_embeddings.extend(sentence_embeddings.cpu().numpy().tolist())
-
-        return all_embeddings
+        Returns:
+            嵌入向量列表
+        """
+        return self.model.encode(texts, show_progress_bar=True).tolist()
 
     def embed_query(self, text: str) -> List[float]:
-        """将单个查询文本转换为嵌入向量"""
-        return self.embed_documents([text])[0]
+        """
+        将单个查询文本转换为嵌入向量
+
+        Args:
+            text: 查询文本
+
+        Returns:
+            嵌入向量
+        """
+        return self.model.encode(text).tolist()
+
+
+class ChromaEmbeddingAdapter:
+    """适配Chroma数据库的嵌入适配器"""
+
+    def __init__(self, model_name="all-MiniLM-L6-v2"):
+        """初始化适配器"""
+        self.model = SentenceTransformer(model_name)
+        self.model_name = model_name
+
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        """
+        实现Chroma所需的嵌入函数接口
+
+        Args:
+            input: 需要嵌入的文本列表
+
+        Returns:
+            嵌入向量列表
+        """
+        embeddings = self.model.encode(input, show_progress_bar=True)
+        return embeddings.tolist()
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """
+        为满足LangChain接口要求添加的方法
+
+        Args:
+            texts: 需要嵌入的文本列表
+
+        Returns:
+            嵌入向量列表
+        """
+        return self(texts)
+
+    def embed_query(self, text: str) -> List[float]:
+        """
+        为满足LangChain接口要求添加的方法
+
+        Args:
+            text: 查询文本
+
+        Returns:
+            嵌入向量
+        """
+        return self([text])[0]

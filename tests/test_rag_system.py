@@ -1,8 +1,10 @@
 import asyncio
 import os
 os.environ["HF_ENDPOINT"] = 'www.hf-mirrors.com'
+os.environ["HF_HOME"] = "E:/data/huggingface"
 import sys
 from pathlib import Path
+import traceback
 
 # 添加项目根目录到系统路径
 project_root = str(Path(__file__).parent.parent)
@@ -28,6 +30,16 @@ class RAGSystemTester:
         # 加载环境变量
         load_dotenv()
 
+        # 检查API密钥
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            print("错误: 未设置OPENROUTER_API_KEY环境变量")
+            print("请在.env文件中添加您的API密钥")
+            print("示例: OPENROUTER_API_KEY=your_api_key_here")
+            raise ValueError("缺少API密钥")
+        else:
+            print(f"已检测到API密钥: {api_key[:5]}...")
+
         # 创建输出处理器
         self.output_handler = OutputHandler()
 
@@ -38,30 +50,43 @@ class RAGSystemTester:
         """初始化系统组件"""
         print("初始化测试环境...")
 
-        # 初始化知识库
-        print("初始化知识库...")
-        embedding_model = EmbeddingModel()
-        self.vector_store = VectorStore(
-            embedding_model,
-            APP_CONFIG["knowledge_base"]["db_path"],
-            APP_CONFIG["knowledge_base"]["chunk_size"],
-            APP_CONFIG["knowledge_base"]["chunk_overlap"],
-        )
+        try:
+            # 初始化知识库
+            print("初始化知识库...")
+            embedding_model = EmbeddingModel()
+            print(f"嵌入模型初始化成功")
 
-        # 初始化LLM客户端
-        self.llm_client = OpenRouterClient(
-            api_key=APP_CONFIG["llm"]["api_key"], model=APP_CONFIG["llm"]["model"]
-        )
+            self.vector_store = VectorStore(
+                embedding_model,
+                APP_CONFIG["knowledge_base"]["db_path"],
+                APP_CONFIG["knowledge_base"]["chunk_size"],
+                APP_CONFIG["knowledge_base"]["chunk_overlap"],
+            )
+            print("向量存储初始化成功")
 
-        # 初始化检索器
-        self.retriever = Retriever(
-            self.vector_store,
-            APP_CONFIG["rag"]["top_k"],
-            APP_CONFIG["rag"]["similarity_threshold"],
-        )
+            # 初始化LLM客户端
+            print(f"正在初始化LLM客户端，模型: {APP_CONFIG['llm']['model']}")
+            self.llm_client = OpenRouterClient(
+                api_key=APP_CONFIG["llm"]["api_key"], model=APP_CONFIG["llm"]["model"]
+            )
+            print("LLM客户端初始化成功")
 
-        # 初始化RAG引擎
-        self.rag_engine = RAGEngine(self.retriever, self.llm_client)
+            # 初始化检索器
+            self.retriever = Retriever(
+                self.vector_store,
+                APP_CONFIG["rag"]["top_k"],
+                APP_CONFIG["rag"]["similarity_threshold"],
+            )
+            print("检索器初始化成功")
+
+            # 初始化RAG引擎
+            self.rag_engine = RAGEngine(self.retriever, self.llm_client)
+            print("RAG引擎初始化成功")
+
+        except Exception as e:
+            print(f"初始化组件时出错: {str(e)}")
+            traceback.print_exc()
+            raise
 
         print("测试环境初始化完成")
 
