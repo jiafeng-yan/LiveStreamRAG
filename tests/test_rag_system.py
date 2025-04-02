@@ -1,6 +1,6 @@
 import asyncio
 import os
-os.environ["HF_ENDPOINT"] = 'www.hf-mirrors.com'
+os.environ["HF_ENDPOINT"] = 'https://www.hf-mirror.com'
 os.environ["HF_HOME"] = "E:/data/huggingface"
 import sys
 from pathlib import Path
@@ -53,7 +53,7 @@ class RAGSystemTester:
         try:
             # 初始化知识库
             print("初始化知识库...")
-            embedding_model = EmbeddingModel()
+            embedding_model = EmbeddingModel(APP_CONFIG["knowledge_base"]["embedding_model"])
             print(f"嵌入模型初始化成功")
 
             self.vector_store = VectorStore(
@@ -61,6 +61,7 @@ class RAGSystemTester:
                 APP_CONFIG["knowledge_base"]["db_path"],
                 APP_CONFIG["knowledge_base"]["chunk_size"],
                 APP_CONFIG["knowledge_base"]["chunk_overlap"],
+                APP_CONFIG["knowledge_base"]["embedding_model"],
             )
             print("向量存储初始化成功")
 

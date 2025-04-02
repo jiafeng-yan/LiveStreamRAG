@@ -14,6 +14,7 @@ APP_CONFIG = {
     },
     # 知识库设置
     "knowledge_base": {
+        "embedding_model": "E:/data/huggingface/hub/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots/86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d",
         "db_path": "data/vector_store",
         "chunk_size": 500,
         "chunk_overlap": 50,
