@@ -4,7 +4,10 @@ import pypdf
 import docx
 import markdown
 from langchain.docstore.document import Document
-
+import re
+import markdown
+from markdown.extensions.extra import ExtraExtension
+from bs4 import BeautifulSoup
 
 class DocumentLoader:
     """处理各种文档格式的加载器"""
@@ -52,10 +55,16 @@ class DocumentLoader:
         with open(file_path, "r", encoding="utf-8") as file:
             text = file.read()
         # 转换为纯文本 (去除标记)
-        html = markdown.markdown(text)
+        html = markdown.Markdown(extensions=[ExtraExtension()]).convert(text)
+        # html = markdown.markdown(text)
         # 简单去除HTML标签 (实际应用中可能需要更复杂的处理)
-        content = html.replace("<p>", "\n").replace("</p>", "\n")
-        content = re.sub(r"<[^>]*>", "", content)
+        content = BeautifulSoup(html, "html.parser").get_text()
+        # content = html.replace("<p>", "\n").replace("</p>", "\n")
+        # content = re.sub(r"<[^>]*>", "", content)
+        # 去除多余空行和首尾空格
+        content = '\n'.join(
+            line.strip() for line in content.splitlines() if line.strip()
+        )
         metadata = {"source": file_path}
         return [Document(page_content=content, metadata=metadata)]
 

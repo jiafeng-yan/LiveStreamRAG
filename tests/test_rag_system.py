@@ -38,7 +38,7 @@ class RAGSystemTester:
             print("示例: OPENROUTER_API_KEY=your_api_key_here")
             raise ValueError("缺少API密钥")
         else:
-            print(f"已检测到API密钥: {api_key[:5]}...")
+            print(f"已检测到API密钥: {api_key[:10]}...")
 
         # 创建输出处理器
         self.output_handler = OutputHandler()
@@ -167,22 +167,25 @@ class RAGSystemTester:
 async def main():
     """主函数"""
     # 确保测试目录存在
-    os.makedirs("data/documents", exist_ok=True)
+    data_root = 'data/documents'
+    os.makedirs(data_root, exist_ok=True)
     os.makedirs("data/logs", exist_ok=True)
 
     # 创建测试器
     tester = RAGSystemTester()
 
     # 加载测试文档
-    await tester.load_test_documents()
+    await tester.load_test_documents(data_dir=data_root)
 
     # 预定义的测试评论
     test_comments = [
         "这个产品有什么特点？",
-        "哇咔咔老年奶粉适合什么年龄段的人喝？",
-        "这个奶粉有什么营养成分？",
-        "请问价格是多少？",
-        "这款奶粉和普通牛奶相比有什么优势？",
+        # "哇咔咔老年奶粉适合什么年龄段的人喝？",
+        # "这个奶粉有什么营养成分？",
+        # "请问价格是多少？",
+        # "这款奶粉和普通牛奶相比有什么优势？",
+        # '这款奶粉适合糖尿病患者吗?',
+        '这款奶粉的价格信息是？',
     ]
 
     # 测试预定义评论

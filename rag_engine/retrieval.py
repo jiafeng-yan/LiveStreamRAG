@@ -28,7 +28,7 @@ class Retriever:
         Returns:
             相关文档列表
         """
-        return self.vector_store.similarity_search(query, k=self.top_k)
+        return self.vector_store.similarity_search(query, k=self.top_k, score_threshold=self.similarity_threshold)
 
     def format_context(self, documents: List[Document]) -> str:
         """

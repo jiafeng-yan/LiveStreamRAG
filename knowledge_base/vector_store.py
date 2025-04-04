@@ -131,6 +131,8 @@ class VectorStore:
         # 分割文档
         chunks = self.text_splitter.split_documents(documents)
         print(f"文档被分割成 {len(chunks)} 个块。")
+        # print(f'chunks: \n {[chunk + '\n' for chunk in chunks]}')
+        print(f'chunks: \n {chunks}')
 
         # 为每个分块添加文档ID元数据，并生成唯一的块ID
         chunk_contents = []
@@ -232,7 +234,7 @@ class VectorStore:
             results_with_scores = self.vectordb.similarity_search_with_relevance_scores(
                 query, k=k
             )
-            print(f"原始检索结果（带分数）: {[(doc.page_content[:30]+'...', score) for doc, score in results_with_scores]}")
+            print(f"原始检索结果（带分数）: \n{[(doc.page_content[:30]+'...', score) for doc, score in results_with_scores]}")
 
             # 过滤低于阈值的结阈
             filtered_results = [

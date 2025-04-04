@@ -20,6 +20,11 @@ class ResponseFormatter:
         # 去除多余空行
         response = re.sub(r"\n\s*\n", "\n\n", response)
 
+        # 检查回复中是否已经包含"问题"和"回答"的标记
+        if "问题:" in response or "问题：" in response:
+            # 如果回复中已经包含了问题格式，则不需要再添加格式
+            return response
+        
         # 添加回复前缀
         formatted = f"问题：{query}\n\n回答：{response}"
 

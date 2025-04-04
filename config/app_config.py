@@ -23,7 +23,8 @@ APP_CONFIG = {
     "llm": {
         "api_key": os.getenv("OPENROUTER_API_KEY"),
         # "model": "deepseek/deepseek-chat",
-        "model": "deepseek/deepseek-v3-base:free",
+        # "model": "deepseek/deepseek-v3-base:free",
+        "model": 'qwen/qwen2.5-vl-32b-instruct:free',
         "temperature": 0.3,
         "max_tokens": 500,
     },

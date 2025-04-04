@@ -18,8 +18,7 @@ class OCRProcessor:
     def extract_text(self, image_path):
         """从图像中提取文本"""
         try:
-            image = Image.open(image_path)
-            text = pytesseract.image_to_string(image, lang=self.lang)
+            text = pytesseract.image_to_string(Image.open(image_path), lang=self.lang, config="--psm 6")
             return text
         except Exception as e:
             print(f"OCR处理出错: {e}")
