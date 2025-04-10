@@ -1,6 +1,6 @@
 import asyncio
 import os
-os.environ["HF_ENDPOINT"] = 'https://www.hf-mirror.com'
+os.environ["HF_ENDPOINT"] = 'https://hf-mirror.com'
 os.environ["HF_HOME"] = "E:/data/huggingface"
 import sys
 from pathlib import Path

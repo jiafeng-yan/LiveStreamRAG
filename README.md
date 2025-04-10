@@ -20,7 +20,8 @@
 ## 技术架构
 
 - **屏幕捕获**: PyAutoGUI, OpenCV
-- **OCR 识别**: Tesseract OCR
+<!-- - **OCR 识别**: Tesseract OCR -->
+- **OCR 识别**: PaddleOCR
 - **知识库**: LangChain, ChromaDB, Sentence Transformers
 - **LLM 接口**: OpenRouter (deepseek-chat)
 
@@ -37,13 +38,18 @@ conda activate rag
 pip install -r requirements.txt
 ```
 
-### Tesseract OCR 安装
+<!-- ### Tesseract OCR 安装
 
 根据操作系统安装 Tesseract OCR:
 
 - **Windows**: 从[GitHub](https://github.com/UB-Mannheim/tesseract/wiki)下载安装
 - **MacOS**: `brew install tesseract tesseract-lang`
-- **Linux**: `sudo apt-get install tesseract-ocr tesseract-ocr-chi-sim`
+- **Linux**: `sudo apt-get install tesseract-ocr tesseract-ocr-chi-sim` -->
+
+### PaddleOCR 安装
+首先安装对应版本 PaddlePaddle 及其依赖项，
+其次安装 PaddleOCR，
+运行过程中可能与高版本 Torch 存在不适配现象，具体可以参考 [Issue14904](https://github.com/PaddlePaddle/PaddleOCR/issues/14904) 进行解决。
 
 ### OpenRouter API 配置
 
@@ -56,6 +62,11 @@ OPENROUTER_API_KEY=your_api_key_here
 ## 使用方法
 
 1. 将产品文档放入`data/documents`目录
+1.1. 运行 Redis 服务:
+   ```bash
+   cd path/to/redis     ## "E:/Redis/Redis-x64-5.0.14.1"
+   redis-server.exe redis.windows.conf
+   ```
 2. 运行主程序:
    ```bash
    python main.py
