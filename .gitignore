@@ -15,7 +15,7 @@ dist/
 build/
 
 # 本地数据
-data/
+# data/
 !data/documents/product_info.md
 
 # 模型缓存
