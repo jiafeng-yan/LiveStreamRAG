@@ -33,7 +33,7 @@ faiss-cpu==1.10.0
 fastapi==0.115.12
 filelock==3.18.0
 fire==0.7.0
-flash_attn @ file:///E:/download/flash_attn-2.7.4.post1%2Bcu124torch2.6.0cxx11abiFALSE-cp310-cp310-win_amd64.whl#sha256=4f0e070dcb873762942560298d58a5f9793194fe042c722c003df636510f1c08
+flash_attn==2.7.4.post1 # cu124_torch2.6.0_cxx11_cp310_win_amd64
 flatbuffers==25.2.10
 fonttools==4.56.0
 frozenlist==1.5.0
@@ -110,8 +110,6 @@ opt-einsum==3.3.0
 orjson==3.10.16
 overrides==7.7.0
 packaging==23.2
-paddleocr==2.10.0
-paddlepaddle-gpu==3.0.0
 pillow==11.1.0
 posthog==3.23.0
 propcache==0.3.1
@@ -134,7 +132,6 @@ pyproject_hooks==1.2.0
 pyreadline3==3.5.4
 PyRect==0.2.0
 PyScreeze==1.0.1
-pytesseract==0.3.10
 python-dateutil==2.9.0.post0
 python-docx==0.8.11
 python-dotenv==1.0.0

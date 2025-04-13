@@ -9,7 +9,7 @@ from langchain.embeddings.base import Embeddings
 class EmbeddingModel:
     """文本嵌入模型封装类"""
 
-    def __init__(self, model_name="all-MiniLM-L6-v2", device: str = "auto"):
+    def __init__(self, model_name="paraphrase-multilingual-MiniLM-L12-v2", device: str = "auto"):
         """
         初始化嵌入模型
 

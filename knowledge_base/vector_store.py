@@ -132,7 +132,7 @@ class VectorStore:
         chunks = self.text_splitter.split_documents(documents)
         print(f"文档被分割成 {len(chunks)} 个块。")
         # print(f'chunks: \n {[chunk + '\n' for chunk in chunks]}')
-        print(f'chunks: \n {chunks}')
+        # print(f'chunks: \n {chunks}')
 
         # 为每个分块添加文档ID元数据，并生成唯一的块ID
         chunk_contents = []

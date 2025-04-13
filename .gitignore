@@ -17,6 +17,7 @@ build/
 # 本地数据
 # data/
 !data/documents/product_info.md
+tests/
 
 # 模型缓存
 E:/data/huggingface/

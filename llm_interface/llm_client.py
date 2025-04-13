@@ -7,24 +7,28 @@ from typing import Dict, Any, Optional, List
 class OpenRouterClient:
     """Openrouter API客户端"""
 
-    def __init__(self, api_key: str, model: str = "deepseek/deepseek-chat"):
+    def __init__(self, api_key: str, model: str = "deepseek/deepseek-chat", temperature: float = 0.3, max_tokens: int = 500):
         """
         初始化OpenRouter客户端
 
         Args:
             api_key: API密钥
             model: 模型名称，默认为deepseek-chat
+            temperature: 温度参数，控制生成文本的随机性
+            max_tokens: 最大生成token数
         """
         self.api_key = api_key
         self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
         self.base_url = "https://openrouter.ai/api/v1"
 
     async def generate(
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
-        temperature: float = 0.3,
-        max_tokens: int = 500,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
         stream: bool = False,
     ) -> str:
         """
@@ -33,8 +37,8 @@ class OpenRouterClient:
         Args:
             prompt: 用户提示词
             system_prompt: 系统提示词
-            temperature: 温度参数
-            max_tokens: 最大生成token数
+            temperature: 温度参数，如果为None则使用初始化时设置的值
+            max_tokens: 最大生成token数，如果为None则使用初始化时设置的值
             stream: 是否流式输出
 
         Returns:
@@ -50,11 +54,15 @@ class OpenRouterClient:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
+        # 如果未指定参数，则使用初始化时设置的默认值
+        temp = temperature if temperature is not None else self.temperature
+        tokens = max_tokens if max_tokens is not None else self.max_tokens
+
         data = {
             "model": self.model,
             "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
+            "temperature": temp,
+            "max_tokens": tokens,
             "stream": stream,
         }
 
