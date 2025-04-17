@@ -73,10 +73,15 @@ class OCRProcessor:
         self.embedding_model = None
         if self.use_semantic:
             try:
-                from knowledge_base.embedding import EmbeddingModel
-                model_name = APP_CONFIG["semantic"]["model"]
-                self.embedding_model = EmbeddingModel(model_name)
-                print(f"语义模型 {model_name} 加载成功")
+                # 尝试导入EmbeddingModel
+                try:
+                    from knowledge_base.embedding import EmbeddingModel
+                    model_name = APP_CONFIG["semantic"]["model"]
+                    self.embedding_model = EmbeddingModel(model_name)
+                    print(f"语义模型 {model_name} 加载成功")
+                except ImportError:
+                    print("无法导入EmbeddingModel模块，将禁用语义相似度功能")
+                    self.use_semantic = False
             except Exception as e:
                 print(f"语义模型加载失败: {e}")
                 self.use_semantic = False
@@ -288,19 +293,24 @@ class OCRProcessor:
                 
             # 3. 语义相似度去重（如果启用）
             if self.use_semantic and self.embedding_model:
-                is_similar = False
-                comment_embedding = self.embedding_model.get_embeddings([comment])[0]
-                
-                for processed in self.processed_comments:
-                    processed_embedding = self.embedding_model.get_embeddings([processed])[0]
-                    similarity = self.embedding_model.compute_similarity(comment_embedding, processed_embedding)
+                try:
+                    is_similar = False
+                    comment_embedding = self.embedding_model.get_embeddings([comment])[0]
                     
-                    if similarity > self.similarity_threshold:
-                        is_similar = True
-                        break
+                    for processed in self.processed_comments:
+                        processed_embedding = self.embedding_model.get_embeddings([processed])[0]
+                        similarity = self.embedding_model.compute_similarity(comment_embedding, processed_embedding)
                         
-                if is_similar:
-                    continue
+                        if similarity > self.similarity_threshold:
+                            is_similar = True
+                            print(f"发现语义相似评论: '{comment}' 与 '{processed}', 相似度: {similarity:.4f}")
+                            break
+                            
+                    if is_similar:
+                        continue
+                except Exception as e:
+                    print(f"计算语义相似度时出错: {e}")
+                    # 如果语义相似度计算失败，继续使用其他去重方法
                     
             # 通过所有去重检查，添加到结果列表
             unique_comments.append(comment)

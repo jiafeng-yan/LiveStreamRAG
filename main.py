@@ -87,12 +87,19 @@ class LiveStreamRAGSystem:
             print("屏幕捕获器初始化成功")
 
             # 初始化OCR处理器，使用增强去重功能
-            self.ocr_processor = OCRProcessor(
-                use_redis=APP_CONFIG["deduplication"]["use_redis"],
-                use_semantic=APP_CONFIG["deduplication"]["use_semantic"],
-                similarity_threshold=APP_CONFIG["deduplication"]["similarity_threshold"]
-            )
-            print("OCR处理器初始化成功")
+            try:
+                self.ocr_processor = OCRProcessor(
+                    use_redis=APP_CONFIG["deduplication"]["use_redis"],
+                    use_semantic=APP_CONFIG["deduplication"]["use_semantic"],
+                    similarity_threshold=APP_CONFIG["deduplication"]["similarity_threshold"]
+                )
+                print("OCR处理器初始化成功")
+            except Exception as e:
+                print(f"初始化OCR处理器时出错: {e}")
+                print("将使用默认OCR处理器（无语义相似度功能）...")
+                # 使用没有语义相似度功能的OCR处理器
+                self.ocr_processor = OCRProcessor(use_redis=False, use_semantic=False)
+                print("默认OCR处理器初始化成功")
 
         except Exception as e:
             print(f"初始化组件时出错: {str(e)}")

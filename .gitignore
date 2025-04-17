@@ -18,6 +18,8 @@ build/
 # data/
 !data/documents/product_info.md
 tests/
+screenshots/
+vector_store/
 
 # 模型缓存
 E:/data/huggingface/

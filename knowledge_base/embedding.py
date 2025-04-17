@@ -65,6 +65,39 @@ class EmbeddingModel:
         if not hasattr(self, 'embedding_function'):
             raise AttributeError("Embedding function not initialized properly.")
         return self.embedding_function
+        
+    def get_embeddings(self, texts: List[str]) -> List[np.ndarray]:
+        """
+        获取文本的嵌入向量
+
+        Args:
+            texts: 文本列表
+
+        Returns:
+            嵌入向量列表（numpy数组格式）
+        """
+        # 使用sentence_transformers直接返回numpy数组
+        return self.model.encode(texts, convert_to_numpy=True)
+        
+    def compute_similarity(self, embedding1: np.ndarray, embedding2: np.ndarray) -> float:
+        """
+        计算两个嵌入向量之间的余弦相似度
+
+        Args:
+            embedding1: 第一个嵌入向量
+            embedding2: 第二个嵌入向量
+
+        Returns:
+            相似度分数（0-1之间的浮点数）
+        """
+        # 确保向量已归一化
+        if embedding1.ndim == 1:
+            embedding1 = embedding1 / np.linalg.norm(embedding1)
+        if embedding2.ndim == 1:
+            embedding2 = embedding2 / np.linalg.norm(embedding2)
+            
+        # 计算余弦相似度
+        return np.dot(embedding1, embedding2)
 
 
 class ChromaEmbeddingAdapter:
