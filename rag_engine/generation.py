@@ -1,6 +1,7 @@
 import asyncio
 from llm_interface.prompt_templates import PromptTemplates
 from rag_engine.retrieval import Retriever
+from config import APP_CONFIG
 
 
 class RAGEngine:
@@ -32,12 +33,13 @@ class RAGEngine:
 
         # 如果没有相关文档
         if not documents:
-            return await self.llm_client.generate(
-                prompt=f"用户问题: {query}\n\n我没有找到与此问题相关的信息，请告知我无法回答。",
-                system_prompt=PromptTemplates.system_prompt(),
-                temperature=0.3,
-                max_tokens=100,
-            )
+            # return await self.llm_client.generate(
+            #     prompt=f"用户问题: {query}\n\n我没有找到与此问题相关的信息，请告知我无法回答。",
+            #     system_prompt=PromptTemplates.system_prompt(),
+            #     temperature=0.3,
+            #     max_tokens=100,
+            # )
+            return "我没有找到与此问题相关的信息，请告知我无法回答。"
 
         # 格式化上下文
         context = self.retriever.format_context(documents)

@@ -23,7 +23,7 @@ class ResponseFormatter:
             return "抱歉，我无法生成回复。请稍后再试。"
 
         # 检查回复中是否已经包含"问题"和"回答"的标记
-        if "问题:" in response or "问题：" in response:
+        if "问题:" in response or "回答：" in response:
             return response
             
         # 清理回复文本，去除多余空行

@@ -32,6 +32,8 @@ APP_CONFIG = {
     "rag": {
         "top_k": 3,  # 检索文档数量
         "similarity_threshold": 0.6,  # 相似度阈值
+        "document_path": "data/documents",  # 文档保存目录
+        "prompt_template": "请根据以下上下文回答问题。\n\n上下文:\n{context}\n\n问题:\n{query}\n\n回答:",  # RAG提示词模板
     },
     # OCR/VLM 设置
     "ocr": {
