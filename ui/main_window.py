@@ -592,6 +592,7 @@ class MainWindow(QMainWindow):
                     
                     # 初始化OCR处理器
                     self.ocr_processor = OCRProcessor(
+                        use_local_model=APP_CONFIG['ocr']['use_local_model'],
                         use_redis=APP_CONFIG["deduplication"]["use_redis"],
                         use_semantic=APP_CONFIG["deduplication"]["use_semantic"],
                         similarity_threshold=APP_CONFIG["deduplication"]["similarity_threshold"]

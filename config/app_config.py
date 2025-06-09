@@ -37,7 +37,15 @@ APP_CONFIG = {
     },
     # OCR/VLM 设置
     "ocr": {
-        # VLM模型配置
+        'use_local_model': True,
+        # 本地 Huggingface VLM 模型配置
+        "local_hf_model": {
+            "name": "Qwen/Qwen2.5-VL-7B-Instruct",
+            "device": "cuda",
+            "prompt": "从这张图片中提取所有的评论文本。",
+            "max_tokens": 1500
+        },
+        # API VLM模型配置
         "vlm_models": {
             "qwen/qwen2.5-vl-32b-instruct:free": {
                 "prompt": "请从图片中的评论区识别所有询问主播的问题。只返回问句，每个问题占一行。如果评论不是问句则忽略。问句通常以'吗'、'？'、'怎么'、'什么'、'如何'、'为什么'等词语结尾。",

@@ -7,21 +7,28 @@ import argparse
 import logging
 from pathlib import Path
 
+os.environ['TRANSFORMERS_CACHE'] = os.path.join(os.environ['HF_HOME'], 'transformers')
+
 # 确保当前目录在路径中，以便导入本地模块
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # 导入相关模块
 from knowledge_base.document_loader import DocumentLoader
 from knowledge_base.vector_store import VectorStore
-from llm_interface.llm_client import LLMClient
+from knowledge_base.embedding import EmbeddingModel
+# from llm_interface.llm_client import LLMClient
+from llm_interface.llm_client import OpenRouterClient
 from rag_engine.retrieval import Retriever
 from rag_engine.generation import RAGEngine
 from chat_response.output_handler import OutputHandler
 from chat_response.response_formatter import ResponseFormatter
 from screen_capture.capture import ScreenCapture
 from screen_capture.ocr import OCRProcessor
+from config import APP_CONFIG
 
 # 配置日志
+if not os.path.exists('data/logs'):
+    os.makedirs('data/logs', exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -51,13 +58,29 @@ def initialize_system():
     """初始化系统组件"""
     # 初始化知识库和向量存储
     document_loader = DocumentLoader()
-    vector_store = VectorStore()
+    embedding_model = EmbeddingModel(APP_CONFIG["knowledge_base"]["embedding_model"])
+    vector_store = VectorStore(
+                        embedding_model=embedding_model,
+                        db_path=APP_CONFIG["knowledge_base"]["db_path"],
+                        chunk_size=APP_CONFIG["knowledge_base"]["chunk_size"],
+                        chunk_overlap=APP_CONFIG["knowledge_base"]["chunk_overlap"],
+                        embedding_model_name=APP_CONFIG["knowledge_base"]["embedding_model"],
+                    )
     
     # 初始化LLM客户端
-    llm_client = LLMClient()
+    llm_client = OpenRouterClient(
+                    api_key=APP_CONFIG["llm"]["api_key"], 
+                    model=APP_CONFIG["llm"]["model"],
+                    temperature=APP_CONFIG["llm"]["temperature"],
+                    max_tokens=APP_CONFIG["llm"]["max_tokens"]
+                )
     
     # 初始化检索器和RAG引擎
-    retriever = Retriever(vector_store)
+    retriever = Retriever(
+                    vector_store,
+                    APP_CONFIG["rag"]["top_k"],
+                    APP_CONFIG["rag"]["similarity_threshold"],
+                )
     rag_engine = RAGEngine(retriever, llm_client)
     
     # 初始化响应处理组件
@@ -66,8 +89,12 @@ def initialize_system():
     
     # 初始化屏幕捕获和OCR组件
     screen_capture = ScreenCapture()
-    ocr_processor = OCRProcessor()
-    
+    ocr_processor = OCRProcessor(
+                        use_local_model=APP_CONFIG['ocr']['use_local_model'],
+                        use_redis=APP_CONFIG["deduplication"]["use_redis"],
+                        use_semantic=APP_CONFIG["deduplication"]["use_semantic"],
+                        similarity_threshold=APP_CONFIG["deduplication"]["similarity_threshold"]
+                    )
     logger.info("系统组件已初始化")
     
     return {

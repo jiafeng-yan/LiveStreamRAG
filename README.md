@@ -17,6 +17,10 @@
 git clone https://github.com/yourusername/llm_rag.git
 cd llm_rag
 
+# 初始化环境
+conda create -n rag python=3.10
+conda activate rag
+
 # 安装依赖
 pip install -r requirements.txt
 
