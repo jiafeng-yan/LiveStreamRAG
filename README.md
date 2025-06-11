@@ -1,9 +1,8 @@
 
-<div style="display: flex; justify-content: center; align-items: baseline; gap: 35px">
-  <h1 style="margin: 0; line-height: 1">LiveStreamRAG</h1>
-  <h1>|</h1>
-  <img src="resources/icon.png" width="60" alt="logo" 
-       style="transform: translateY(18px)">
+<div align="center">
+  <img src="resources/icon.png" width="60" alt="logo">
+  
+  # LiveStreamRAG
 </div>
 
 <!-- ![image](resources\icon.png) -->
@@ -12,7 +11,7 @@ LiveStreamRAG 是一款专为直播场景设计的智能问答系统，旨在提
 
 <!-- This project is an AI-powered co-pilot designed for the dynamic world of live streaming. It leverages a fine-tuned Vision Language Model (VLM) to accurately identify viewer questions from the fast-moving chat screen, and uses a Retrieval-Augmented Generation (RAG) engine to instantly provide verified answers from a local knowledge base. By automating Q&A, StreamOracle empowers streamers to focus on creating engaging content, ensuring no important question goes unanswered. -->
 
-## 功能特点
+## Feature
 
 - 通过 VLM 针对化提取评论区中提问
 - 支持多种文档格式的知识库管理
@@ -20,7 +19,7 @@ LiveStreamRAG 是一款专为直播场景设计的智能问答系统，旨在提
 - 支持本地或者 API 调用模型
 - 支持 Redis 持久化历史数据
 
-## 安装
+## Installation
 
 ```bash
 # 克隆仓库
@@ -35,7 +34,7 @@ conda activate ls_rag
 pip install -r requirements.txt
 ```
 
-## 环境配置
+## Configuration
 
 在项目根目录创建`.env`文件，添加以下配置（根据需要调整）：
 
@@ -53,7 +52,7 @@ LOG_DIR=./logs
 
 同时可以按需调整项目配置文件 `config/app_config.py` 。
 
-## 运行
+## Run
 
 ### 1. As a Project
 
@@ -84,14 +83,14 @@ redis-server.exe
 # 相关数据存储在 dump.rdb 文件中
 ```
 
-## UI 设计
+## UI Design
 
-<div style="display: flex; justify-content: center">
-    <img src="resources/demo.png" width="90%" alt="demo">
+<div align="center">
+    <img src="resources/demo.png" width="60%" alt="demo">
 </div>
 
 
-## 功能集成
+## 功能集成 Modules
 
 ### 知识库管理
 
@@ -141,7 +140,7 @@ comments = ocr_processor.process_image(image)
 print(comments)
 ```
 
-## 项目结构
+## Project Framework
 
 ```
 llm_rag/
@@ -164,10 +163,10 @@ llm_rag/
 └── README.md                  # 说明文档
 ```
 
-## 许可证
+## License
 
 MIT
 
-## 贡献
+## Contribution
 
 欢迎提交问题和拉取请求。
