@@ -1,13 +1,16 @@
-# LiveStreamRAG
+
+<div style="display: flex; justify-content: center; align-items: baseline; gap: 35px">
+  <h1 style="margin: 0; line-height: 1">LiveStreamRAG</h1>
+  <h1>|</h1>
+  <img src="resources/icon.png" width="60" alt="logo" 
+       style="transform: translateY(18px)">
+</div>
 
 <!-- ![image](resources\icon.png) -->
 
 LiveStreamRAG 是一款专为直播场景设计的智能问答系统，旨在提升主播与观众的互动效率。通过微调视觉语言模型（VLM, Qwen-VL-7B），系统能从直播评论区的屏幕截图中精准提取观众提问，过滤噪声评论。结合检索增强生成（RAG）技术，系统从产品知识库中检索相关信息，并由大语言模型（LLM, Qwen3-8B）生成准确、自然的回答。LiveStreamRAG 实现了端到端的自动化流程，包括图像去重、Redis 输出去重和 Windows UI 展示，兼具算法深度与工程价值，为直播电商和内容创作提供高效、实用的 AI 解决方案。
 
-
 <!-- This project is an AI-powered co-pilot designed for the dynamic world of live streaming. It leverages a fine-tuned Vision Language Model (VLM) to accurately identify viewer questions from the fast-moving chat screen, and uses a Retrieval-Augmented Generation (RAG) engine to instantly provide verified answers from a local knowledge base. By automating Q&A, StreamOracle empowers streamers to focus on creating engaging content, ensuring no important question goes unanswered. -->
-
-<img src="resources\icon.png" width=100 alt="image">
 
 ## 功能特点
 
@@ -80,6 +83,13 @@ python3 build_exe.py
 redis-server.exe
 # 相关数据存储在 dump.rdb 文件中
 ```
+
+## UI 设计
+
+<div style="display: flex; justify-content: center">
+    <img src="resources/demo.png" width="90%" alt="demo">
+</div>
+
 
 ## 功能集成
 
