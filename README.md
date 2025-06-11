@@ -1,31 +1,35 @@
-# LLM RAG 系统
+# LiveStreamRAG
 
-基于大型语言模型的检索增强生成系统，支持知识库管理、文档检索和自动回复功能。
+<!-- ![image](resources\icon.png) -->
+
+LiveStreamRAG 是一款专为直播场景设计的智能问答系统，旨在提升主播与观众的互动效率。通过微调视觉语言模型（VLM, Qwen-VL-7B），系统能从直播评论区的屏幕截图中精准提取观众提问，过滤噪声评论。结合检索增强生成（RAG）技术，系统从产品知识库中检索相关信息，并由大语言模型（LLM, Qwen3-8B）生成准确、自然的回答。LiveStreamRAG 实现了端到端的自动化流程，包括图像去重、Redis 输出去重和 Windows UI 展示，兼具算法深度与工程价值，为直播电商和内容创作提供高效、实用的 AI 解决方案。
+
+
+<!-- This project is an AI-powered co-pilot designed for the dynamic world of live streaming. It leverages a fine-tuned Vision Language Model (VLM) to accurately identify viewer questions from the fast-moving chat screen, and uses a Retrieval-Augmented Generation (RAG) engine to instantly provide verified answers from a local knowledge base. By automating Q&A, StreamOracle empowers streamers to focus on creating engaging content, ensuring no important question goes unanswered. -->
+
+<img src="resources\icon.png" width=100 alt="image">
 
 ## 功能特点
 
+- 通过 VLM 针对化提取评论区中提问
 - 支持多种文档格式的知识库管理
 - 基于向量数据库的高效检索
-- 集成多种大型语言模型（LLM）
-- 屏幕捕获和 OCR 功能，支持提取直播评论
-- 多模态视觉语言模型（VLM）集成
+- 支持本地或者 API 调用模型
+- 支持 Redis 持久化历史数据
 
 ## 安装
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/llm_rag.git
-cd llm_rag
+git clone git@github.com:jiafeng-yan/LiveStreamRAG.git LiveStreamRAG-Main
+cd LiveStreamRAG-Main
 
 # 初始化环境
-conda create -n rag python=3.10
-conda activate rag
+conda create -n ls_rag python=3.10
+conda activate ls_rag
 
 # 安装依赖
 pip install -r requirements.txt
-
-# 安装项目
-pip install -e .
 ```
 
 ## 环境配置
@@ -44,7 +48,40 @@ VECTOR_DIR=./data/vector_store
 LOG_DIR=./logs
 ```
 
-## 使用方法
+同时可以按需调整项目配置文件 `config/app_config.py` 。
+
+## 运行
+
+### 1. As a Project
+
+```bash
+python3 main.py
+```
+
+### 2. As a Package
+
+```bash
+pip install -e .
+# `pip uninstall LiveStreamRAG` to uninstall
+```
+
+### 3. As a App
+
+```bash
+python3 build_exe.py
+# run dist/LiveStreamRAG.exe
+```
+
+### Additional Features
+
+```bash
+# 可以通过使用 Redis 持久化存储，保证持久化去重
+# 开启 Redis 服务
+redis-server.exe
+# 相关数据存储在 dump.rdb 文件中
+```
+
+## 功能集成
 
 ### 知识库管理
 
@@ -93,7 +130,6 @@ image = screen_capture.capture()
 comments = ocr_processor.process_image(image)
 print(comments)
 ```
-
 
 ## 项目结构
 

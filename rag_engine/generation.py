@@ -26,7 +26,7 @@ class RAGEngine:
             query: 用户查询
 
         Returns:
-            生成的回复
+            str 生成的回复
         """
         # 检索相关文档
         documents = self.retriever.retrieve(query)
@@ -39,7 +39,7 @@ class RAGEngine:
             #     temperature=0.3,
             #     max_tokens=100,
             # )
-            return "我没有找到与此问题相关的信息，请告知我无法回答。"
+            return f"{query}\n==> 我没有找到与此问题相关的信息，换一个问题试试吧。"
 
         # 格式化上下文
         context = self.retriever.format_context(documents)

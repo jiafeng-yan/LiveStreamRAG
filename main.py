@@ -1,216 +1,251 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+import asyncio
 import os
-import sys
-import argparse
-import logging
+import traceback
 from pathlib import Path
-
-os.environ['TRANSFORMERS_CACHE'] = os.path.join(os.environ['HF_HOME'], 'transformers')
-
-# 确保当前目录在路径中，以便导入本地模块
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-# 导入相关模块
-from knowledge_base.document_loader import DocumentLoader
-from knowledge_base.vector_store import VectorStore
-from knowledge_base.embedding import EmbeddingModel
-# from llm_interface.llm_client import LLMClient
-from llm_interface.llm_client import OpenRouterClient
-from rag_engine.retrieval import Retriever
-from rag_engine.generation import RAGEngine
-from chat_response.output_handler import OutputHandler
-from chat_response.response_formatter import ResponseFormatter
+from dotenv import load_dotenv
+from config.app_config import APP_CONFIG
 from screen_capture.capture import ScreenCapture
 from screen_capture.ocr import OCRProcessor
-from config import APP_CONFIG
+from knowledge_base.embedding import EmbeddingModel
+from knowledge_base.vector_store import VectorStore
+from knowledge_base.document_loader import DocumentLoader
+from llm_interface.llm_client import ResponseLLMClient
+from rag_engine.retrieval import Retriever
+from rag_engine.generation import RAGEngine
+from chat_response.response_formatter import ResponseFormatter
+from chat_response.output_handler import OutputHandler
+import cv2
+import numpy as np
 
-# 配置日志
-if not os.path.exists('data/logs'):
-    os.makedirs('data/logs', exist_ok=True)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(Path("data/logs/app.log"), encoding="utf-8")
-    ]
-)
-logger = logging.getLogger("main")
+class LiveStreamRAGSystem:
+    """直播RAG系统类"""
 
-def setup_directories():
-    """创建必要的目录结构"""
-    directories = [
-        "data/logs",
-        "data/documents",
-        "data/vector_store",
-        "data/debug_vlm",
-        "data/video"
-    ]
-    
-    for directory in directories:
-        Path(directory).mkdir(parents=True, exist_ok=True)
-        
-    logger.info("目录结构已创建")
+    def __init__(self):
+        """初始化系统环境"""
+        # 加载环境变量
+        load_dotenv()
 
-def initialize_system():
-    """初始化系统组件"""
-    # 初始化知识库和向量存储
-    document_loader = DocumentLoader()
-    embedding_model = EmbeddingModel(APP_CONFIG["knowledge_base"]["embedding_model"])
-    vector_store = VectorStore(
-                        embedding_model=embedding_model,
-                        db_path=APP_CONFIG["knowledge_base"]["db_path"],
-                        chunk_size=APP_CONFIG["knowledge_base"]["chunk_size"],
-                        chunk_overlap=APP_CONFIG["knowledge_base"]["chunk_overlap"],
-                        embedding_model_name=APP_CONFIG["knowledge_base"]["embedding_model"],
-                    )
-    
-    # 初始化LLM客户端
-    llm_client = OpenRouterClient(
-                    api_key=APP_CONFIG["llm"]["api_key"], 
-                    model=APP_CONFIG["llm"]["model"],
-                    temperature=APP_CONFIG["llm"]["temperature"],
-                    max_tokens=APP_CONFIG["llm"]["max_tokens"]
+        # 检查API密钥
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            print("错误: 未设置OPENROUTER_API_KEY环境变量")
+            print("请在.env文件中添加您的API密钥")
+            print("示例: OPENROUTER_API_KEY=your_api_key_here")
+            raise ValueError("缺少API密钥")
+        else:
+            print(f"已检测到API密钥: {api_key[:10]}...")
+
+        # 创建输出处理器
+        self.output_handler = OutputHandler()
+
+        # 初始化系统组件
+        self._initialize_components()
+
+    def _initialize_components(self):
+        """初始化系统组件"""
+        print("初始化系统环境...")
+
+        try:
+            # 初始化知识库
+            print("初始化知识库...")
+            embedding_model = EmbeddingModel(APP_CONFIG["knowledge_base"]["embedding_model"])
+            print(f"嵌入模型初始化成功")
+
+            self.vector_store = VectorStore(
+                embedding_model=embedding_model,
+                db_path=APP_CONFIG["knowledge_base"]["db_path"],
+                chunk_size=APP_CONFIG["knowledge_base"]["chunk_size"],
+                chunk_overlap=APP_CONFIG["knowledge_base"]["chunk_overlap"],
+                embedding_model_name=APP_CONFIG["knowledge_base"]["embedding_model"],
+            )
+            print("向量存储初始化成功")
+
+            # 初始化LLM客户端
+            print(f"正在初始化LLM客户端，模型: {APP_CONFIG['llm']['model']}")
+            self.llm_client = ResponseLLMClient(
+                use_local_model=APP_CONFIG['llm']['use_local_model'],
+                model_path=APP_CONFIG['llm']['model_path'],
+                api_key=APP_CONFIG["llm"]["api_key"], 
+                model=APP_CONFIG["llm"]["model"],
+                temperature=APP_CONFIG["llm"]["temperature"],
+                max_tokens=APP_CONFIG["llm"]["max_tokens"]
+            )
+            print("LLM客户端初始化成功")
+
+            # 初始化检索器
+            self.retriever = Retriever(
+                self.vector_store,
+                APP_CONFIG["rag"]["top_k"],
+                APP_CONFIG["rag"]["similarity_threshold"],
+            )
+            print("检索器初始化成功")
+
+            # 初始化RAG引擎
+            self.rag_engine = RAGEngine(self.retriever, self.llm_client)
+            print("RAG引擎初始化成功")
+
+            # 初始化屏幕捕获器
+            self.screen_capture = ScreenCapture(APP_CONFIG["capture"]["region"])
+            print("屏幕捕获器初始化成功")
+
+            # 初始化OCR处理器，使用增强去重功能
+            try:
+                self.ocr_processor = OCRProcessor(
+                    use_local_model=APP_CONFIG['ocr']['use_local_model'],
+                    use_redis=APP_CONFIG["deduplication"]["use_redis"],
+                    use_semantic=APP_CONFIG["deduplication"]["use_semantic"],
+                    similarity_threshold=APP_CONFIG["deduplication"]["similarity_threshold"]
                 )
-    
-    # 初始化检索器和RAG引擎
-    retriever = Retriever(
-                    vector_store,
-                    APP_CONFIG["rag"]["top_k"],
-                    APP_CONFIG["rag"]["similarity_threshold"],
-                )
-    rag_engine = RAGEngine(retriever, llm_client)
-    
-    # 初始化响应处理组件
-    response_formatter = ResponseFormatter()
-    output_handler = OutputHandler()
-    
-    # 初始化屏幕捕获和OCR组件
-    screen_capture = ScreenCapture()
-    ocr_processor = OCRProcessor(
-                        use_local_model=APP_CONFIG['ocr']['use_local_model'],
-                        use_redis=APP_CONFIG["deduplication"]["use_redis"],
-                        use_semantic=APP_CONFIG["deduplication"]["use_semantic"],
-                        similarity_threshold=APP_CONFIG["deduplication"]["similarity_threshold"]
-                    )
-    logger.info("系统组件已初始化")
-    
-    return {
-        "document_loader": document_loader,
-        "vector_store": vector_store,
-        "llm_client": llm_client,
-        "retriever": retriever,
-        "rag_engine": rag_engine,
-        "response_formatter": response_formatter,
-        "output_handler": output_handler,
-        "screen_capture": screen_capture,
-        "ocr_processor": ocr_processor
-    }
+                print("OCR处理器初始化成功")
+            except Exception as e:
+                print(f"初始化OCR处理器时出错: {e}")
+                print("将使用默认OCR处理器（无语义相似度功能）...")
+                # 使用没有语义相似度功能的OCR处理器
+                self.ocr_processor = OCRProcessor(use_redis=False, use_semantic=False)
+                print("默认OCR处理器初始化成功")
 
-def parse_arguments():
-    """解析命令行参数"""
-    parser = argparse.ArgumentParser(description="LLM_RAG系统 - 基于大语言模型的检索增强生成系统")
-    
-    parser.add_argument("--load-documents", action="store_true", help="加载data/documents目录下的文档到知识库")
-    parser.add_argument("--interactive", action="store_true", help="启动交互式问答模式")
-    parser.add_argument("--capture-mode", action="store_true", help="启动屏幕捕获模式")
-    parser.add_argument("--video-file", type=str, help="使用视频文件代替屏幕捕获")
-    
-    return parser.parse_args()
+        except Exception as e:
+            print(f"初始化组件时出错: {str(e)}")
+            traceback.print_exc()
+            raise
 
-def interactive_mode(components):
-    """交互式问答模式"""
-    rag_engine = components["rag_engine"]
-    response_formatter = components["response_formatter"]
-    output_handler = components["output_handler"]
-    
-    print("\n===== 交互式问答模式 =====")
-    print("输入 'exit' 或 'quit' 退出\n")
-    
-    while True:
-        query = input("\n请输入问题: ")
-        if query.lower() in ["exit", "quit", "退出"]:
-            break
+        print("系统环境初始化完成")
+
+    async def load_knowledge_base(self, data_dir="data/documents"):
+        """加载知识库"""
+        os.makedirs(data_dir, exist_ok=True)
+
+        # 检查是否有文档
+        documents = []
+        for filename in os.listdir(data_dir):
+            file_path = os.path.join(data_dir, filename)
+            if os.path.isfile(file_path):
+                try:
+                    docs = DocumentLoader.load(file_path)
+                    documents.extend(docs)
+                    print(f"已加载文档: {filename}")
+                except Exception as e:
+                    print(f"加载文档 {filename} 时出错: {e}")
+
+        if documents:
+            self.vector_store.add_documents(documents, "initial_docs")
+            print(f"已将 {len(documents)} 个文档添加到知识库")
+        else:
+            print("警告: 没有找到文档，请将产品文档放入 data/documents 目录")
+
+    async def process_comment(self, comment):
+        """处理单条评论"""
+        try:
+            print(f"\n处理评论: {comment}")
+
+            # 生成回复
+            response = await self.rag_engine.generate_response(comment)
+
+            # 格式化回复
+            formatted_response = ResponseFormatter.format_response(response, comment)
+            truncated_response = ResponseFormatter.truncate_if_needed(formatted_response)
+
+            # 输出和记录
+            self.output_handler.print_response(comment, truncated_response)
+            self.output_handler.log_interaction(comment, truncated_response)
+
+            return truncated_response
+
+        except Exception as e:
+            error_msg = f"处理评论时出错: {e}"
+            print(error_msg)
+            return error_msg
+
+    async def run(self):
+        """运行系统主循环"""
+        print("系统启动，开始监控直播评论...")
+
+        try:
+            debug_mode = APP_CONFIG["capture"]["debug_mode"]
+            debug_dir = APP_CONFIG["capture"]["debug_dir"]
             
-        # 生成回答
-        response = rag_engine.generate_response(query)
-        
-        # 格式化回答
-        formatted_response = response_formatter.format_response(response, query)
-        
-        # 输出回答
-        output_handler.print_response(query, formatted_response)
-        output_handler.log_interaction(query, formatted_response)
+            if debug_mode:
+                os.makedirs(debug_dir, exist_ok=True)
+                print(f"调试模式已启用，截图将保存到 {debug_dir}")
+            
+            # 性能优化参数
+            frame_counter = 0
+            skip_frames = APP_CONFIG["ocr"]["performance_optimization"]["skip_frames"]
+            enable_motion_detection = APP_CONFIG["ocr"]["performance_optimization"]["enable_motion_detection"]
+            motion_threshold = APP_CONFIG["ocr"]["performance_optimization"]["motion_threshold"]
+            previous_frame = None
+            
+            print(f"性能优化: 跳帧={skip_frames}, 运动检测={'启用' if enable_motion_detection else '禁用'}")
+            
+            while True:
+                # 捕获屏幕
+                screenshot_path = self.screen_capture.capture_and_save()
+                
+                # 在调试模式下保存截图副本
+                if debug_mode:
+                    import shutil
+                    debug_path = os.path.join(debug_dir, os.path.basename(screenshot_path))
+                    shutil.copy2(screenshot_path, debug_path)
+                    print(f"已保存调试截图: {debug_path}")
+                
+                # 性能优化: 跳帧处理
+                frame_counter += 1
+                should_process = (frame_counter % (skip_frames + 1) == 0)
+                
+                # 性能优化: 运动检测
+                if enable_motion_detection and should_process:
+                    current_frame = cv2.imread(screenshot_path)
+                    if previous_frame is not None:
+                        # 计算两帧差异
+                        diff = cv2.absdiff(current_frame, previous_frame)
+                        non_zero_count = np.count_nonzero(diff)
+                        avg_diff = non_zero_count / diff.size
+                        should_process = avg_diff > (motion_threshold / 1000.0)
+                        if debug_mode and not should_process:
+                            print(f"跳过处理: 图像变化量({avg_diff:.5f})低于阈值({motion_threshold/1000.0:.5f})")
+                    previous_frame = current_frame
+                
+                if should_process:
+                    # 提取评论
+                    comments = await self.ocr_processor.process_image(screenshot_path)
 
-def capture_mode(components, video_file=None):
-    """屏幕捕获模式"""
-    from tests.test_ocr_vlm import run_vlm_test
-    
-    if video_file:
-        print(f"\n===== 视频文件处理模式 =====")
-        print(f"视频文件: {video_file}")
-        run_vlm_test(video_path=video_file)
-    else:
-        print("\n===== 屏幕捕获模式 =====")
-        run_vlm_test()
+                    # 处理新评论
+                    if comments:
+                        print(f"检测到 {len(comments)} 条新评论")
+                        for comment in comments:
+                            await self.process_comment(comment)
+                    else:
+                        print("未检测到新评论")
+                
+                # 删除截图文件
+                os.remove(screenshot_path)
 
-def load_documents(components):
-    """加载文档到知识库"""
-    document_loader = components["document_loader"]
-    vector_store = components["vector_store"]
-    
-    print("\n===== 加载文档到知识库 =====")
-    
-    documents_dir = Path("data/documents")
-    if not documents_dir.exists() or not any(documents_dir.iterdir()):
-        print("未找到文档，请将文档放入 data/documents 目录")
-        return
-        
-    # 加载文档
-    documents = document_loader.load_directory(str(documents_dir))
-    if not documents:
-        print("未能成功加载任何文档")
-        return
-        
-    # 将文档添加到向量存储
-    vector_store.add_documents(documents)
-    print(f"成功加载 {len(documents)} 个文档到知识库")
+                # 等待下一次捕获
+                await asyncio.sleep(APP_CONFIG["capture"]["interval"])
 
-def main():
+        except KeyboardInterrupt:
+            print("\n程序已停止")
+        except Exception as e:
+            print(f"运行时出错: {str(e)}")
+            traceback.print_exc()
+
+
+async def main():
     """主函数"""
-    # 创建必要的目录结构
-    setup_directories()
-    
-    # 解析命令行参数
-    args = parse_arguments()
-    
-    # 初始化系统组件
-    components = initialize_system()
-    
-    # 根据命令行参数执行相应的操作
-    if args.load_documents:
-        load_documents(components)
-        
-    if args.interactive:
-        interactive_mode(components)
-        
-    if args.capture_mode or args.video_file:
-        capture_mode(components, args.video_file)
-        
-    # 如果没有指定任何操作，默认进入交互式模式
-    if not (args.load_documents or args.interactive or args.capture_mode or args.video_file):
-        print("\n没有指定操作模式，默认进入交互式问答模式")
-        interactive_mode(components)
+    # 确保目录存在
+    os.makedirs("data/screenshots", exist_ok=True)
+    os.makedirs("data/documents", exist_ok=True)
+    os.makedirs(APP_CONFIG["output"]["log_dir"], exist_ok=True)
+
+    print("启动RAG直播评论系统...")
+    print("请将产品文档放入 data/documents 目录")
+    print("按Ctrl+C停止程序")
+
+    # 创建并运行系统
+    system = LiveStreamRAGSystem()
+    await system.load_knowledge_base()
+    await system.run()
+
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n程序已中断")
-    except Exception as e:
-        logger.error(f"程序出错: {str(e)}", exc_info=True)
-        print(f"\n程序出错: {str(e)}")
-    finally:
-        print("\n程序已退出")
+    asyncio.run(main())

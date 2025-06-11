@@ -17,7 +17,7 @@ import aiohttp
 # 新增导入: 用于本地HF模型
 try:
     import torch
-    from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
+    from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
     TRANSFORMERS_AVAILABLE = True
     print('本地模型正常载入。')
 except ImportError as e:
@@ -143,7 +143,7 @@ class OCRProcessor:
             self.local_processor = AutoProcessor.from_pretrained(model_name)
             
             # 加载模型
-            self.local_model = Qwen2VLForConditionalGeneration.from_pretrained(
+            self.local_model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
                 model_name,
                 torch_dtype=torch.float16,
                 low_cpu_mem_usage=True

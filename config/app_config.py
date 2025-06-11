@@ -8,14 +8,14 @@ load_dotenv()
 APP_CONFIG = {
     # 屏幕捕获设置
     "capture": {
-        "interval": 2.0,  # 截图间隔(秒)，可根据性能需求调整：较小的值提高响应速度但增加系统负载，较大的值减少系统负载但可能错过部分评论
+        "interval": 1.0,  # 截图间隔(秒)，可根据性能需求调整：较小的值提高响应速度但增加系统负载，较大的值减少系统负载但可能错过部分评论
+        # "region": (1465, 429, 899, 806),
         "region": None,  # 截图区域(x, y, width, height)，None表示用户手动选择
         "debug_mode": False,  # 是否保存调试截图
         "debug_dir": "data/debug_screenshots",  # 调试截图保存目录
     },
     # 知识库设置
     "knowledge_base": {
-        # "embedding_model": "E:/data/huggingface/hub/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots/86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d",
         "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2",
         "db_path": "data/vector_store",
         "chunk_size": 500,
@@ -23,21 +23,23 @@ APP_CONFIG = {
     },
     # LLM设置
     "llm": {
+        'use_local_model': False,
+        'model_path': 'Qwen/Qwen3-8B',
         "api_key": os.getenv("OPENROUTER_API_KEY"),
-        "model": 'qwen/qwen2.5-vl-32b-instruct:free',
+        "model": 'Qwen/Qwen3-8B',
         "temperature": 0.3,
-        "max_tokens": 500,
+        "max_tokens": 1500,
     },
     # RAG设置
     "rag": {
         "top_k": 3,  # 检索文档数量
-        "similarity_threshold": 0.6,  # 相似度阈值
+        "similarity_threshold": 0.5,  # 相似度阈值
         "document_path": "data/documents",  # 文档保存目录
         "prompt_template": "请根据以下上下文回答问题。\n\n上下文:\n{context}\n\n问题:\n{query}\n\n回答:",  # RAG提示词模板
     },
     # OCR/VLM 设置
     "ocr": {
-        'use_local_model': True,
+        'use_local_model': False,
         # 本地 Huggingface VLM 模型配置
         "local_hf_model": {
             "name": "Qwen/Qwen2.5-VL-7B-Instruct",

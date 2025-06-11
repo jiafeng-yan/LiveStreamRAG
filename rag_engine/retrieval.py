@@ -5,7 +5,7 @@ from langchain.docstore.document import Document
 class Retriever:
     """检索器"""
 
-    def __init__(self, vector_store, top_k: int = 3, similarity_threshold: float = 0.6):
+    def __init__(self, vector_store, top_k: int = 3, similarity_threshold: float = 0.5):
         """
         初始化检索器
 

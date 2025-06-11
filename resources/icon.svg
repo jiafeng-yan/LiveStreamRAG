@@ -1,0 +1,18 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="200" height="200" rx="45" fill="#f8f9fa"/>
+  
+  <!-- 直播屏幕 -->
+  <rect x="35" y="55" width="130" height="90" rx="12" fill="#6c757d" opacity="0.1" stroke="#6c757d" stroke-width="3"/>
+  
+  <!-- 直播信号点 -->
+  <circle cx="60" cy="80" r="10" fill="#dc3545" opacity="0.7">
+    <animate attributeName="opacity" values="0.7;0.3;0.7" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- 对话气泡 -->
+  <circle cx="130" cy="102" r="18" fill="#495057" opacity="0.6"/>
+  <circle cx="130" cy="102" r="12" fill="#495057" opacity="0.4"/>
+  
+
+</svg>

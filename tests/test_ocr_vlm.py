@@ -269,19 +269,21 @@ class VLMCommentHunter:
             
         return unique_comments
 
-async def process_video():
+async def process_video(video_path : str = None):
     """从视频文件中提取评论"""
-    if not os.path.exists(VIDEO_PATH):
-        print(f"视频文件不存在: {VIDEO_PATH}")
+    if video_path is None:
+        video_path = VIDEO_PATH
+    if not os.path.exists(video_path):
+        print(f"视频文件不存在: {video_path}")
         return
 
-    print(f"开始处理视频: {VIDEO_PATH}")
+    print(f"开始处理视频: {video_path}")
     
     # 初始化评论识别器
     comment_hunter = VLMCommentHunter()
     
     # 打开视频文件
-    cap = cv2.VideoCapture(VIDEO_PATH)
+    cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print("无法打开视频文件")
         return
@@ -320,6 +322,84 @@ async def process_video():
         # 处理当前帧
         print(f"\n处理第 {frame_index} 帧...")
         comments = await comment_hunter.process_image(frame_path)
+        
+        # 打印提取的评论
+        if comments:
+            print("\n提取到的评论:")
+            for i, comment in enumerate(comments, 1):
+                print(f"{i}. {comment}")
+        else:
+            print("未提取到评论")
+            
+        # 删除临时文件
+        if not DEBUG_MODE:
+            os.remove(frame_path)
+            
+        frame_index += 1
+        
+    # 释放资源
+    cap.release()
+    print(f"视频处理完成，共处理 {frame_index} 帧")
+
+async def video_mock(components, video_path : str = None):
+    """从视频文件中提取评论"""
+    
+    if not os.path.exists(video_path):
+        print(f"视频文件不存在: {video_path}")
+        return
+
+    print(f"开始处理视频: {video_path}")
+    
+    # 初始化评论识别器
+    # comment_hunter = VLMCommentHunter()
+
+    rag_engine = components["rag_engine"]
+    response_formatter = components["response_formatter"]
+    output_handler = components["output_handler"]
+    ocr_processor = components["ocr_processor"]
+    
+    # 打开视频文件
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print("无法打开视频文件")
+        return
+        
+    # 获取视频信息
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = frame_count / fps
+    print(f"视频帧率: {fps}fps, 总帧数: {frame_count}, 时长: {duration:.2f}秒")
+    
+    # 设置输出目录
+    output_dir = "data/frames"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # 处理视频帧
+    frame_index = 0
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+            
+        # 裁剪评论区域
+        if CAPTURE_REGION:
+            x, y, w, h = CAPTURE_REGION
+            frame = frame[y:y+h, x:x+w]
+            
+        # 判断是否处理当前帧
+        # if not comment_hunter.should_process_frame(frame):
+        frame_index += 1
+        if frame_index % comment_hunter.skip_frames != 0:
+            continue
+            
+        # 保存当前帧
+        frame_path = os.path.join(output_dir, f"frame_{frame_index:04d}.jpg")
+        cv2.imwrite(frame_path, frame)
+        
+        # 处理当前帧
+        print(f"\n处理第 {frame_index} 帧...")
+        # comments = await comment_hunter.process_image(frame_path)
+        comments = await 
         
         # 打印提取的评论
         if comments:

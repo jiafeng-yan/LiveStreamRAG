@@ -13,6 +13,8 @@ rag/
 *.egg-info/
 dist/
 build/
+hub/
+*.spec
 
 # 本地数据
 # data/
@@ -20,9 +22,6 @@ build/
 tests/
 screenshots/
 vector_store/
-
-# 模型缓存
-E:/data/huggingface/
 
 # 测试数据
 .coverage
@@ -36,6 +35,7 @@ temp/
 
 # 向量存储
 data/vector_store/
+*.rdb
 
 # IDE和编辑器
 .idea/

@@ -574,6 +574,8 @@ class MainWindow(QMainWindow):
                     
                     # 初始化LLM客户端
                     self.llm_client = OpenRouterClient(
+                        use_local_model=APP_CONFIG['llm']['use_local_model'],
+                        model_path=APP_CONFIG['llm']['model_path'],
                         api_key=APP_CONFIG["llm"]["api_key"], 
                         model=APP_CONFIG["llm"]["model"],
                         temperature=APP_CONFIG["llm"]["temperature"],
@@ -599,7 +601,7 @@ class MainWindow(QMainWindow):
                     )
                     
                     # 初始化输出处理器
-                    self.output_handler = OutputHandler()
+                    self.output_handler = OutputHandler(use_redis=False, use_semantic=False)
                 
                 async def load_knowledge_base(self):
                     """加载知识库"""
