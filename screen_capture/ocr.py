@@ -10,21 +10,21 @@ import redis
 import hashlib
 import time
 from sentence_transformers import SentenceTransformer, util
-from config.app_config import APP_CONFIG
+from config import APP_CONFIG
 import asyncio
 import aiohttp
 
 # 新增导入: 用于本地HF模型
 try:
     import torch
-    from transformers import AutoProcessor, LlavaForConditionalGeneration
+    from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
     TRANSFORMERS_AVAILABLE = True
     print('本地模型正常载入。')
 except ImportError as e:
     TRANSFORMERS_AVAILABLE = False
     print(e)
     print("警告: `transformers` 或 `torch` 未安装或报错。本地模型功能将不可用。")
-    print("请运行: pip install torch transformers==4.35.2 bitsandbytes")
+    print("请运行: pip install -U torch transformers")
 
 
 class OCRProcessor:
@@ -143,7 +143,7 @@ class OCRProcessor:
             self.local_processor = AutoProcessor.from_pretrained(model_name)
             
             # 加载模型
-            self.local_model = LlavaForConditionalGeneration.from_pretrained(
+            self.local_model = Qwen2VLForConditionalGeneration.from_pretrained(
                 model_name,
                 torch_dtype=torch.float16,
                 low_cpu_mem_usage=True
