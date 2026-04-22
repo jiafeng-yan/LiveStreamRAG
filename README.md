@@ -1,12 +1,7 @@
-
-<div style="display: flex; justify-content: center; align-items: baseline; gap: 35px">
-  <h1 style="margin: 0; line-height: 1">LiveStreamRAG</h1>
-  <h1>|</h1>
-  <img src="resources/icon.png" width="60" alt="logo" 
-       style="transform: translateY(18px)">
-</div>
-
-<!-- ![image](resources\icon.png) -->
+<p align="center">
+  <strong><span style="font-size: 64px;">LiveStreamRAG</span></strong>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="resources/icon.png" width="60" align="middle">
+</p>
 
 LiveStreamRAG 是一款专为直播场景设计的智能问答系统，旨在提升主播与观众的互动效率。通过微调视觉语言模型（VLM, Qwen-VL-7B），系统能从直播评论区的屏幕截图中精准提取观众提问，过滤噪声评论。结合检索增强生成（RAG）技术，系统从产品知识库中检索相关信息，并由大语言模型（LLM, Qwen3-8B）生成准确、自然的回答。LiveStreamRAG 实现了端到端的自动化流程，包括图像去重、Redis 输出去重和 Windows UI 展示，兼具算法深度与工程价值，为直播电商和内容创作提供高效、实用的 AI 解决方案。
 
