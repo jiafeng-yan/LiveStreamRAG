@@ -16,14 +16,20 @@ build/
 hub/
 *.spec
 
-# 本地数据
-# data/
-!data/documents/product_info.md
-tests/
-screenshots/
-vector_store/
+# 本地数据 (保留 documents/)
+data/debug/
+data/debug_vlm/
+data/screenshots/
+data/test_screenshots/
+data/frames/
+data/video/
+data/logs/
+data/vector_store/
+*.mp4
+*.rdb
 
-# 测试数据
+# 测试
+tests/
 .coverage
 htmlcov/
 
@@ -31,11 +37,10 @@ htmlcov/
 *.log
 logs/
 temp/
-.env
 
-# 向量存储
-data/vector_store/
-*.rdb
+# 环境配置
+.env
+.env.local
 
 # IDE和编辑器
 .idea/
